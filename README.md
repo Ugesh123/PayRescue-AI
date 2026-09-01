@@ -4,12 +4,14 @@
 
 ## 1. Project Overview
 PayRescue AI turns failed payments from a dead end into an autonomous recovery pipeline: detect the failure, understand why it happened, decide the best recovery strategy, act on it, and track the outcome — instead of just asking the customer to "please retry."
+<img width="2876" height="1582" alt="Screenshot 2026-09-01 083542" src="https://github.com/user-attachments/assets/cf6d898d-3308-439c-8b95-bae81c931a63" />
 
 ## 2. Problem Statement
 When a payment fails, merchants typically show a generic error and hope the customer retries. This silently costs real revenue, especially for failures that are recoverable (transient bank timeouts, wrong OTP, a declined card that would work via a different route).
 
 ## 3. Solution
 An agentic pipeline — **Detect → Diagnose → Decide → Recover → Verify → Escalate → Measure** — that inspects each failed payment's real Razorpay webhook data, classifies the failure, evaluates multiple recovery strategies with explainable scoring (including a lightweight learning loop from historical outcomes), executes the safest viable action, and surfaces everything on a merchant dashboard.
+<img width="2640" height="1332" alt="Screenshot 2026-09-01 083806" src="https://github.com/user-attachments/assets/63d65bb9-a662-4cb1-a5da-271fcf769da9" />
 
 ## 4. Agentic Workflow
 ```
@@ -38,6 +40,7 @@ Python, FastAPI, SQLModel, PostgreSQL, Alembic, LangGraph, Razorpay Python SDK, 
 ## 7. Razorpay Integration
 - **Real**: order/payment lifecycle via test-mode webhooks (`payment.failed`, `payment.captured`, `order.paid`, `payment_link.paid`) with HMAC signature verification; real Payment Link generation via the Razorpay SDK.
 - **Simulated**: alternate payment route selection, customer notifications (reminder/reauthentication/update-payment-method), automatic retry charging (intent only — never charges).
+<img width="2848" height="1438" alt="Screenshot 2026-09-01 091310" src="https://github.com/user-attachments/assets/39bbaf4e-a399-4152-a795-266de59abf16" />
 
 ## 8. What Is Real vs Simulated
 | Component | Status |

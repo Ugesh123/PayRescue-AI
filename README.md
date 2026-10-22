@@ -11,29 +11,45 @@ PayRescue turns failed payments from a dead end into a recovery pipeline: it dia
 
 ---
 
-## 🧭 Product Thinking
+## 🧭 Understanding the Problem
 
-### Context
-- **Industry:** online payments and checkout.
-- **Users:** merchants losing sales to failed payments, their **operations teams** who handle failures, and **customers** whose payment did not go through.
+### 1️⃣ Context
 
-### Diagnosis
-- **Pain point:** when a payment fails, most merchants show a generic error and hope the customer retries. This silently loses revenue, even when the failure is **recoverable**: a bank timeout, a wrong OTP, or a declined card that would work another way.
-- **Key insight:** different failures need different responses. Retrying an *insufficient funds* failure is useless; retrying a *bank timeout* often works; a *fraud flag* must never be retried.
-- **Trade-off:** recover revenue fast vs. stay safe on fraud and high-value payments. PayRescue deliberately chooses **safety first**.
+| | |
+|---|---|
+| **About the company** | Built for **Razorpay**, one of India's leading payment gateways, as part of the Razorpay AI Buildathon (*AI Growth & Agentic Commerce* theme). |
+| **About the industry** | Online payments: every failed transaction at checkout is a sale the merchant may never get back. |
+| **Stakeholders** | **Merchants** (lose revenue), their **operations teams** (handle failures), **customers** (frustrated at checkout) and the **payment gateway** (merchant success = gateway success). |
+| **Research** | Studied the failure reasons Razorpay returns in its webhooks (`payment.failed` and others) and grouped them into **11 failure categories**, from `bank_timeout` and `incorrect_otp` to `fraud_or_risk_flag`. |
 
-### Strategy
-- **Persona:** a merchant operations manager who needs to know *what failed, why, and what to do next*, without reading logs.
-- **Solution:** a pipeline that runs **Detect → Diagnose → Decide → Recover → Verify → Escalate → Measure** for every failed payment, with every decision explained on a merchant dashboard.
+### 2️⃣ Diagnosis
 
-### Impact & Risk
-- **Business impact:** a recovered payment closes the loop on the original order, and recovery analytics show results by strategy, failure category and **revenue impact**. The dashboard tracks **Revenue at Risk** and **Recovery Rate**.
-- **Risk & mitigation:**
-  - Fraud or risk flags **never** auto-retry.
-  - High-value and repeated failures go to **human review**.
-  - **HMAC signature checks** and **idempotent updates** ensure a duplicate webhook can never process a payment twice.
+| | |
+|---|---|
+| **Pain points** | When a payment fails, most checkouts show a generic error and hope the customer retries. Recoverable failures (a bank timeout, a wrong OTP, a declined card that would work another way) silently become lost revenue. |
+| **Key takeaways** | Different failures need different responses: retrying *insufficient funds* is useless, retrying a *bank timeout* often works, and a *fraud flag* must **never** be retried. |
+| **Competitor analysis** | The common approach is a one-size-fits-all "please retry" message or blind automatic retries. Neither explains *why* a payment failed or chooses a different action for different failures. PayRescue's edge is **diagnosis first, explainable action second**. |
+| **Trade-off** | Recover revenue fast vs. stay safe. PayRescue deliberately chooses **safety first**: risky and high-value cases go to a human, even if that recovers less automatically. |
 
-### What's Next
+### 3️⃣ Strategy
+
+| | |
+|---|---|
+| **User persona** | **Priya, a merchant operations manager** *(illustrative persona)*. She handles failed payments every day and needs to know *what failed, why, and what to do next*, without reading logs. |
+| **Key decisions** | Rule-based, explainable decisions over a black-box model (every action can be justified to a merchant), and real Razorpay payment links over simulated recovery wherever an API exists. |
+| **Solution** | A pipeline that runs **Detect → Diagnose → Decide → Recover → Verify → Escalate → Measure** for every failed payment, choosing among **9 recovery strategies** with visible scores on a merchant dashboard. |
+| **Implementation** | FastAPI + PostgreSQL services, an optional **6-node LangGraph** agent, a React dashboard, and **58 automated tests**. Details in the engineering section below. |
+
+### 4️⃣ Impact
+
+| | |
+|---|---|
+| **Business impact** | Turns a dead-end error into a recovery path. A paid recovery link closes the loop on the original order, and the dashboard tracks **Revenue at Risk** and **Recovery Rate**. |
+| **Financial impact** | Recovery analytics report recovered revenue **by strategy and by failure category**, so a merchant can see which actions actually earn money back. *(Built on Razorpay test-mode data, so no live revenue figures are claimed.)* |
+| **Risk & mitigation** | Fraud or risk flags **never** auto-retry · high-value and repeated failures go to **human review** · **HMAC signature checks** and **idempotent updates** stop a duplicate webhook from ever processing a payment twice · automatic charging is intentionally **not** implemented. |
+| **Annexures** | [What is Real vs Simulated](#-what-is-real-vs-simulated) · [How it works](#%EF%B8%8F-how-it-works) · [Tests](#-tests) · [Demo flow](#-demo-flow-23-minutes) |
+
+### 🗺️ What's Next
 - Real WhatsApp, SMS and email channels for customer-action strategies
 - A safe, rate-limited automatic retry mechanism
 - Specialist sub-agents per recovery channel
